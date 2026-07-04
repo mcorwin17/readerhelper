@@ -6,6 +6,7 @@ const DEFAULTS = {
   model: "gpt-4o-mini",
   openaiKey: "",
   localEndpoint: "http://localhost:11434",
+  localModel: "llama3.1",
   localOnly: false
 };
 
@@ -15,6 +16,7 @@ async function restore() {
   model.value = s.model;
   openaiKey.value = s.openaiKey;
   localEndpoint.value = s.localEndpoint;
+  localModel.value = s.localModel;
   localOnly.checked = !!s.localOnly;
   updateProviderUI();
 }
@@ -25,6 +27,7 @@ async function save() {
     model: model.value.trim() || DEFAULTS.model,
     openaiKey: openaiKey.value.trim(),
     localEndpoint: localEndpoint.value.trim() || DEFAULTS.localEndpoint,
+    localModel: localModel.value.trim() || DEFAULTS.localModel,
     localOnly: localOnly.checked
   });
   showStatus("settings saved successfully!", "success");
@@ -87,6 +90,7 @@ const provider = document.getElementById("provider");
 const model = document.getElementById("model");
 const openaiKey = document.getElementById("openaiKey");
 const localEndpoint = document.getElementById("localEndpoint");
+const localModel = document.getElementById("localModel");
 const localOnly = document.getElementById("localOnly");
 
 // wire up events
