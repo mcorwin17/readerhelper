@@ -2,6 +2,7 @@
 
 A modern, AI-powered Chrome extension that helps you understand and analyze any webpage content. Ask questions about what you're reading and get intelligent, contextual responses.
 
+[![CI](https://github.com/mcorwin17/readerhelper/actions/workflows/ci.yml/badge.svg)](https://github.com/mcorwin17/readerhelper/actions/workflows/ci.yml)
 ![Reading Assistant](https://img.shields.io/badge/Chrome-Extension-brightgreen)
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -63,18 +64,28 @@ A modern, AI-powered Chrome extension that helps you understand and analyze any 
 3. Open extension options
 4. Select "Ollama" provider
 5. Ensure endpoint is `http://localhost:11434`
+6. Set the model to any tag you've pulled (default: `llama3.1`)
 
 ## 📁 Project Structure
 
 ```
 readerhelper/
 ├── manifest.json      # Extension configuration
-├── background.js      # Service worker for API communication
+├── background.js      # Service worker: provider routing + API communication
+├── lib/parse.js       # Pure helpers (prompt building, response parsing) — unit-tested
 ├── content.js         # UI injection and page interaction
 ├── options.html       # Settings page
 ├── options.js         # Options page logic
+├── tests/             # node:test suite for lib/
 └── README.md          # This file
 ```
+
+## 🧭 How It Works
+
+1. `content.js` collects visible text spans from the page, each tagged with a stable span id
+2. The injected UI sends `{question, meta, spans}` to the service worker via `chrome.runtime` messaging
+3. `background.js` routes to the configured provider (OpenAI or local Ollama) and requests a structured JSON answer
+4. Responses carry `answer_bullets`, per-span `citations`, and an `uncertainty` score; malformed model output degrades gracefully instead of breaking the UI
 
 ## 🎨 UI Components
 
@@ -96,6 +107,13 @@ readerhelper/
 2. Make changes to the code
 3. Reload the extension in Chrome
 4. Test your changes
+
+### Tests
+
+Unit tests cover the prompt-building and response-parsing logic and run in CI on every push:
+```bash
+node --test
+```
 
 ### Building for Distribution
 1. Ensure all files are properly formatted
