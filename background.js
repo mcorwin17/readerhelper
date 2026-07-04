@@ -1,6 +1,8 @@
 // maxwell corwin 2025
 // background.js (mv3 service worker)
 
+import { buildPrompt, safeParseJSON } from "./lib/parse.js";
+
 const SYSTEM_PROMPT = `you are a helpful reading assistant. answer questions about the provided text content concisely and accurately.
 
 respond with a json object containing:
@@ -15,6 +17,7 @@ const DEFAULTS = {
   model: "gpt-4o-mini",
   openaiKey: "",
   localEndpoint: "http://localhost:11434",
+  localModel: "llama3.1",
   localOnly: false
 };
 
@@ -30,19 +33,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 async function getSettings() {
   const settings = await chrome.storage.local.get(DEFAULTS);
   return { ...DEFAULTS, ...settings };
-}
-
-function buildPrompt(question, meta, spans) {
-  const context = spans.map(s => `[${s.id}] ${s.text}`).join('\n\n');
-  return `question: ${question}
-
-page: ${meta.title || 'unknown'}
-url: ${meta.url || 'unknown'}
-
-text content:
-${context}
-
-please analyze the above text and answer the question.`;
 }
 
 async function handleAsk(payload) {
@@ -92,7 +82,7 @@ async function handleAsk(payload) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "llama3.1", // change to your local model tag
+      model: settings.localModel || DEFAULTS.localModel,
       prompt: SYSTEM_PROMPT + "\n\n" + prompt,
       stream: false
     })
@@ -105,22 +95,4 @@ async function handleAsk(payload) {
 
   const data = await res.json();
   return safeParseJSON(data?.response || "");
-}
-
-function safeParseJSON(s) {
-  try {
-    const j = JSON.parse(s);
-    // basic shape guard
-    if (!Array.isArray(j.answer_bullets)) j.answer_bullets = String(s).split(/\n+/).slice(0, 6);
-    if (!Array.isArray(j.citations)) j.citations = [];
-    if (typeof j.uncertainty !== "number") j.uncertainty = 0.5;
-    return j;
-  } catch (e) {
-    // fallback response if json parsing fails
-    return {
-      answer_bullets: [String(s).substring(0, 200) + "..."],
-      citations: [],
-      uncertainty: 0.8
-    };
-  }
 }
