@@ -82,17 +82,17 @@ function showStatus(message, type = "info") {
   }
 }
 
-// wire up events
-document.getElementById("save").addEventListener("click", save);
-document.getElementById("test").addEventListener("click", test);
-provider.addEventListener("change", updateProviderUI);
-
-// cache element refs
+// cache element refs (must come before any use — const bindings are not hoisted)
 const provider = document.getElementById("provider");
 const model = document.getElementById("model");
 const openaiKey = document.getElementById("openaiKey");
 const localEndpoint = document.getElementById("localEndpoint");
 const localOnly = document.getElementById("localOnly");
+
+// wire up events
+document.getElementById("save").addEventListener("click", save);
+document.getElementById("test").addEventListener("click", test);
+provider.addEventListener("change", updateProviderUI);
 
 // initialize
 restore();
